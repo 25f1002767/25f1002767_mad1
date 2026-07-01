@@ -1,0 +1,61 @@
+<h2>Manage Treks</h2>
+
+<a href="/create-trek">
+    Create Trek
+</a>
+
+<br><br>
+
+<table border="1">
+
+    <tr>
+        <th>ID</th>
+        <th>Trek Name</th>
+        <th>Location</th>
+        <th>Actions</th>
+        <th>Assign Staff</th>
+    </tr>
+
+    {% for trek in treks %}
+
+    <tr>
+
+        <td>{{ trek.id }}</td>
+
+        <td>{{ trek.trek_name }}</td>
+
+        <td>{{ trek.location }}</td>
+
+        <td>
+            
+
+            <a href="/assign-staff/{{ trek.id }}">
+                Assign Staff
+            </a>
+
+            |
+
+            <a href="/edit-trek/{{ trek.id }}">
+                Edit
+            </a>
+                        |
+
+            <a
+            href="/delete-trek/{{ trek.id }}"
+            onclick="return confirm('Are you sure?')"
+            >
+            Delete
+            </a>
+
+        </td>
+        <td>
+            <a href="/assign-staff/{{ trek.id }}">
+                Assign Staff
+            </a>
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>

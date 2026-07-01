@@ -1,0 +1,50 @@
+<h2>Manage Users</h2>
+
+<table border="1">
+
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    {% for user in users %}
+
+    <tr>
+
+        <td>{{ user.id }}</td>
+
+        <td>{{ user.username }}</td>
+
+        <td>{{ user.email }}</td>
+
+        <td>
+            {% if user.is_active %}
+                Active
+            {% else %}
+                Inactive
+            {% endif %}
+        </td>
+        <td>
+
+    {% if user.is_active %}
+
+    <a href="/deactivate-user/{{ user.id }}">
+        Deactivate
+    </a>
+
+    {% else %}
+
+    Inactive
+
+    {% endif %}
+
+</td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>

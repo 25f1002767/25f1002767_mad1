@@ -1,0 +1,23 @@
+<h2>My Assigned Treks</h2>
+
+<table border="1">
+
+    <tr>
+        <th>ID</th>
+        <th>Trek Name</th>
+        <th>Location</th>
+        <th>Difficulty</th>
+    </tr>
+
+    {% for trek in assigned_treks %}
+
+    <tr>
+        <td>{{ trek.id }}</td>
+        <td>{{ trek.trek_name }}</td>
+        <td>{{ trek.location }}</td>
+        <td>{{ trek.difficulty }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>

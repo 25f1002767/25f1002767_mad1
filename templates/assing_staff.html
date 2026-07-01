@@ -1,0 +1,23 @@
+<h2>Assign Staff</h2>
+
+<p>Trek: {{ trek.trek_name }}</p>
+
+<form method="POST">
+
+    <select name="staff_id">
+
+        {% for staff in approved_staff %}
+
+        <option value="{{ staff.id }}">
+            {{ staff.user.username }}
+        </option>
+
+        {% endfor %}
+
+    </select>
+
+    <button type="submit">
+        Assign
+    </button>
+
+</form>
