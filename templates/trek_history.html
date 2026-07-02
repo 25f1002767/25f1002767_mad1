@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trek History</title>
+</head>
+<body>
+
+<h2>Completed Treks</h2>
+
+<table border="1">
+
+    <tr>
+        <th>Booking ID</th>
+        <th>Trek Name</th>
+        <th>Location</th>
+        <th>Difficulty</th>
+        <th>Booking Date</th>
+    </tr>
+
+    {% for booking in history %}
+    <tr>
+        <td>{{ booking.id }}</td>
+        <td>{{ booking.trek.trek_name }}</td>
+        <td>{{ booking.trek.location }}</td>
+        <td>{{ booking.trek.difficulty }}</td>
+        <td>{{ booking.booking_date }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+</body>
+</html>

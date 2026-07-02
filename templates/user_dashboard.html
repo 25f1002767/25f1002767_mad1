@@ -1,6 +1,41 @@
 <h2>Available Treks</h2>
 <a href="/my-bookings">My Bookings</a>
+<a href="/trek-history">Trek History</a>
 <br><br>
+<form method="GET">
+
+    <input
+        type="text"
+        name="location"
+        placeholder="Search Location">
+
+    <select name="difficulty">
+
+        <option value="">
+            All Difficulties
+        </option>
+
+        <option value="Easy">
+            Easy
+        </option>
+
+        <option value="Medium">
+            Medium
+        </option>
+
+        <option value="Hard">
+            Hard
+        </option>
+
+    </select>
+
+    <button type="submit">
+        Search
+    </button>
+
+</form>
+
+<br><hr><br>
 
 <table border="1">
 
@@ -27,6 +62,11 @@
             <a href="/book-trek/{{ trek.id }}">
                 Book Trek
             </a>
+                <a href="/user/profile">
+               Update Profile
+            </a>
+
+<br><br>
         </td>
 
     </tr>

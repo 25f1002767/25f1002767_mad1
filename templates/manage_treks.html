@@ -1,10 +1,11 @@
-<h2>Manage Treks</h2>
+<<h2>Manage Treks</h2>
 
 <a href="/create-trek">
     Create Trek
 </a>
 
 <br><br>
+
 <form method="GET">
 
     <input
@@ -26,8 +27,12 @@
         <th>ID</th>
         <th>Trek Name</th>
         <th>Location</th>
+        <th>Difficulty</th>
+        <th>Duration</th>
+        <th>Slots</th>
+        <th>Status</th>
+        <th>Assigned Staff</th>
         <th>Actions</th>
-        <th>Assign Staff</th>
     </tr>
 
     {% for trek in treks %}
@@ -40,8 +45,23 @@
 
         <td>{{ trek.location }}</td>
 
+        <td>{{ trek.difficulty }}</td>
+
+        <td>{{ trek.duration_days }}</td>
+
+        <td>{{ trek.available_slots }}</td>
+
+        <td>{{ trek.status }}</td>
+
         <td>
-            
+            {% if trek.assigned_staff_id %}
+                {{ trek.assigned_staff_id }}
+            {% else %}
+                Not Assigned
+            {% endif %}
+        </td>
+
+        <td>
 
             <a href="/assign-staff/{{ trek.id }}">
                 Assign Staff
@@ -52,20 +72,15 @@
             <a href="/edit-trek/{{ trek.id }}">
                 Edit
             </a>
-                        |
+
+            |
 
             <a
-            href="/delete-trek/{{ trek.id }}"
-            onclick="return confirm('Are you sure?')"
-            >
-            Delete
+                href="/delete-trek/{{ trek.id }}"
+                onclick="return confirm('Are you sure?')">
+                Delete
             </a>
 
-        </td>
-        <td>
-            <a href="/assign-staff/{{ trek.id }}">
-                Assign Staff
-            </a>
         </td>
 
     </tr>

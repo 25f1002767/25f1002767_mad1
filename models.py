@@ -105,9 +105,9 @@ class Trek(db.Model):
     )
 
     status = db.Column(
-        db.String(20),
-        default="pending"
-    )
+    db.String(20),
+    default="Open"
+)
 
     description = db.Column(db.Text)
 

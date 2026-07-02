@@ -490,11 +490,52 @@ def user_dashboard():
     if session["role"] != "user":
         return "Access Denied"
 
-    treks = Trek.query.all()
+    location = request.args.get("location")
+    difficulty = request.args.get("difficulty")
+
+    treks = Trek.query.filter(
+        Trek.available_slots > 0
+    )
+
+    if location:
+        treks = treks.filter(
+            Trek.location.contains(location)
+        )
+
+    if difficulty:
+        treks = treks.filter_by(
+            difficulty=difficulty
+        )
+
+    treks = treks.all()
 
     return render_template(
         "user_dashboard.html",
         treks=treks
+    )
+@app.route("/user/profile", methods=["GET", "POST"])
+def user_profile():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "user":
+        return "Access Denied"
+
+    user = User.query.get(session["user_id"])
+
+    if request.method == "POST":
+
+        user.username = request.form.get("username")
+        user.email = request.form.get("email")
+
+        db.session.commit()
+
+        return redirect("/user")
+
+    return render_template(
+        "user_profile.html",
+        user=user
     )
 
 
@@ -508,6 +549,12 @@ def book_trek(trek_id):
         return "Access Denied"
 
     trek = Trek.query.get_or_404(trek_id)
+    
+    if trek.status != "Open":
+       return "This trek is not open for booking"
+
+    if trek.available_slots <= 0:
+       return "No slots available for this trek"
 
     existing_booking = Booking.query.filter_by(
         user_id=session["user_id"],
@@ -525,6 +572,8 @@ def book_trek(trek_id):
     )
 
     db.session.add(booking)
+    trek.available_slots -= 1
+
     db.session.commit()
 
     return redirect("/user")
@@ -714,6 +763,9 @@ def cancel_booking(booking_id):
 
     if booking.user_id != session["user_id"]:
         return "Access Denied"
+    trek = Trek.query.get(booking.trek_id)
+
+    trek.available_slots += 1
 
     db.session.delete(booking)
     db.session.commit()
@@ -734,7 +786,24 @@ def admin_bookings():
         "admin_bookings.html",
         bookings=bookings
     )
+@app.route("/trek-history")
+def trek_history():
 
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "user":
+        return "Access Denied"
+
+    history = Booking.query.join(Trek).filter(
+        Booking.user_id == session["user_id"],
+        Trek.status == "Completed"
+    ).all()
+
+    return render_template(
+        "trek_history.html",
+        history=history
+    )
 
     
 
