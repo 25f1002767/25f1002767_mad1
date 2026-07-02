@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Staff</title>
+</head>
+<body>
+
+<h2>Manage Staff</h2>
+<form method="GET">
+
+    <input
+        type="text"
+        name="search"
+        placeholder="Search staff name">
+
+    <button type="submit">
+        Search
+    </button>
+
+</form>
+
+<br>
+
+<table border="1">
+
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Contact</th>
+        <th>Experience</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for staff in staff_members %}
+
+    <tr>
+
+        <td>{{ staff.id }}</td>
+
+        <td>{{ staff.user.username }}</td>
+
+        <td>{{ staff.user.email }}</td>
+
+        <td>{{ staff.contact_number }}</td>
+
+        <td>{{ staff.experience_years }}</td>
+
+        <td>{{ staff.approval_status }}</td>
+        <td>
+
+        {% if staff.user.is_blacklisted %}
+
+            <a href="/activate-staff/{{ staff.id }}">
+                Activate
+            </a>
+
+        {% else %}
+
+            <a href="/blacklist-staff/{{ staff.id }}">
+                Blacklist
+            </a>
+
+        {% endif %}
+
+        |
+
+        <a href="/delete-staff/{{ staff.id }}">
+            Delete
+        </a>
+
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+</body>
+</html>

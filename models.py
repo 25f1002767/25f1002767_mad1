@@ -160,3 +160,4 @@ class Booking(db.Model):
         db.String(20),
         default="pending"
     )
+    

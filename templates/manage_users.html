@@ -1,5 +1,18 @@
 <h2>Manage Users</h2>
+<form method="GET">
 
+    <input
+        type="text"
+        name="search"
+        placeholder="Search user name or email">
+
+    <button type="submit">
+        Search
+    </button>
+
+</form>
+
+<br>
 <table border="1">
 
     <tr>
@@ -28,6 +41,23 @@
             {% endif %}
         </td>
         <td>
+            <td>
+
+    {% if user.is_blacklisted %}
+
+        <a href="/activate-user/{{ user.id }}">
+            Activate
+        </a>
+
+    {% else %}
+
+        <a href="/blacklist-user/{{ user.id }}">
+            Blacklist
+        </a>
+
+    {% endif %}
+
+</td>
 
     {% if user.is_active %}
 

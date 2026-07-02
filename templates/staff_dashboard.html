@@ -1,4 +1,11 @@
 <h2>My Assigned Treks</h2>
+<h2>Staff Dashboard</h2>
+
+<p>Total Assigned Treks: {{ total_assigned_treks }}</p>
+
+<p>Total Registered Trekkers: {{ total_trekkers }}</p>
+
+<hr>
 
 <table border="1">
 
@@ -17,6 +24,25 @@
         <td>{{ trek.location }}</td>
         <td>{{ trek.difficulty }}</td>
     </tr>
+        <a href="/staff/trek-users/{{ trek.id }}">
+            View Participants
+        </a>
+        <a href="/staff/update-slots/{{ trek.id }}">
+            Update Slots
+        </a>
+
+        <a href="/staff/update-status/{{ trek.id }}">
+            Update Status
+        </a>
+        <a href="/staff/profile">
+            Update Profile
+        </a>
+
+<hr>
+
+        <br><br>
+
+        <br><br>
 
     {% endfor %}
 

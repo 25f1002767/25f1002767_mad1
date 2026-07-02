@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from models import db, User, StaffProfile, Trek
 from models import User
+from models import Booking
 app = Flask(__name__)
 app.secret_key = "trekking_secret_key"
 
@@ -46,7 +47,6 @@ def register():
 
     if request.method == "POST":
 
-        # Receive form data
         username = request.form["username"]
         email = request.form["email"]
         password = request.form["password"]
@@ -54,7 +54,6 @@ def register():
         contact_number = request.form["contact_number"]
         experience_years = request.form["experience_years"]
 
-        # Check duplicate username
         existing_user = User.query.filter_by(
             username=username
         ).first()
@@ -62,7 +61,6 @@ def register():
         if existing_user:
             return "Username already exists"
 
-        # Check duplicate email
         existing_email = User.query.filter_by(
             email=email
         ).first()
@@ -70,10 +68,8 @@ def register():
         if existing_email:
             return "Email already exists"
 
-        # Hash password
         hashed_password = generate_password_hash(password)
 
-        # Create user
         user = User(
             username=username,
             email=email,
@@ -81,14 +77,9 @@ def register():
             role=role
         )
 
-        # Save user
         db.session.add(user)
         db.session.commit()
 
-        return redirect("/login")
-
-        return render_template("register.html")
-        # Create staff profile if role is staff
         if role == "staff":
 
             staff = StaffProfile(
@@ -102,11 +93,8 @@ def register():
             db.session.add(staff)
             db.session.commit()
 
-            return "Registration successful. Waiting for admin approval."
+        return redirect("/login")
 
-        return "Registration successful."
-
-    # GET request
     return render_template("register.html")
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -121,8 +109,12 @@ def login():
         if not user:
             return "Invalid Email"
 
+        if user.is_blacklisted:
+            return "Your account has been blocked by Admin"
+
         if not check_password_hash(user.password, password):
             return "Invalid Password"
+
         session["user_id"] = user.id
         session["role"] = user.role
 
@@ -130,6 +122,9 @@ def login():
             return redirect("/admin")
 
         elif user.role == "staff":
+
+            if user.staff_profile is None:
+                return "Staff profile not found"
 
             if user.staff_profile.approval_status != "approved":
                 return "Your account is waiting for admin approval."
@@ -142,20 +137,16 @@ def login():
     return render_template("login.html")
 @app.route("/admin")
 def admin_dashboard():
+
     if "user_id" not in session:
         return redirect("/login")
 
     if session["role"] != "admin":
         return "Access Denied"
-    pending_staff = StaffProfile.query.filter_by(
-        approval_status="pending"
-    ).all()
 
-    return render_template(
-        "pending_staff.html",
-        pending_staff=pending_staff
-    )
-    total_users = User.query.filter_by(role="user").count()
+    total_users = User.query.filter_by(
+        role="user"
+    ).count()
 
     total_staff = StaffProfile.query.filter_by(
         approval_status="approved"
@@ -172,12 +163,115 @@ def admin_dashboard():
         total_treks=total_treks,
         total_bookings=total_bookings
     )
+@app.route("/admin/pending-staff")
+def pending_staff():
 
-    return "Welcome Admin Dashboard"
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "admin":
+        return "Access Denied"
+
+    pending_staff = StaffProfile.query.filter_by(
+        approval_status="pending"
+    ).all()
+
+    return render_template(
+        "pending_staff.html",
+        pending_staff=pending_staff
+    )
+@app.route("/admin/staff")
+def manage_staff():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "admin":
+        return "Access Denied"
+
+    search = request.args.get("search")
+
+    staff_members = StaffProfile.query
+
+    if search:
+
+        staff_members = staff_members.join(User).filter(
+            User.username.contains(search)
+        )
+
+    staff_members = staff_members.all()
+
+    return render_template(
+        "manage_staff.html",
+        staff_members=staff_members
+    )
+@app.route("/blacklist-staff/<int:staff_id>")
+def blacklist_staff(staff_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "admin":
+        return "Access Denied"
+
+    staff = StaffProfile.query.get_or_404(staff_id)
+
+    staff.user.is_blacklisted = True
+    staff.user.is_active = False
+
+    db.session.commit()
+
+    return redirect("/admin/staff")
+@app.route("/activate-staff/<int:staff_id>")
+def activate_staff(staff_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "admin":
+        return "Access Denied"
+
+    staff = StaffProfile.query.get_or_404(staff_id)
+
+    staff.user.is_blacklisted = False
+    staff.user.is_active = True
+
+    db.session.commit()
+
+    return redirect("/admin/staff")
+@app.route("/delete-staff/<int:staff_id>")
+def delete_staff(staff_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "admin":
+        return "Access Denied"
+
+    staff = StaffProfile.query.get_or_404(staff_id)
+
+    user = staff.user
+
+    db.session.delete(staff)
+    db.session.delete(user)
+
+    db.session.commit()
+
+    return redirect("/admin/staff")
 @app.route("/admin/treks")
 def manage_treks():
 
-    treks = Trek.query.all()
+    search = request.args.get("search")
+
+    treks = Trek.query
+
+    if search:
+
+        treks = treks.filter(
+            Trek.trek_name.contains(search)
+        )
+
+    treks = treks.all()
 
     return render_template(
         "manage_treks.html",
@@ -230,9 +324,140 @@ def staff_dashboard():
         assigned_staff_id=staff.id
     ).all()
 
+    total_assigned_treks = len(assigned_treks)
+
+    total_trekkers = 0
+
+    for trek in assigned_treks:
+        total_trekkers += Booking.query.filter_by(
+            trek_id=trek.id
+        ).count()
+
     return render_template(
         "staff_dashboard.html",
-        assigned_treks=assigned_treks
+        assigned_treks=assigned_treks,
+        total_assigned_treks=total_assigned_treks,
+        total_trekkers=total_trekkers
+    )
+@app.route("/staff/profile", methods=["GET", "POST"])
+def staff_profile():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "staff":
+        return "Access Denied"
+
+    staff = StaffProfile.query.filter_by(
+        user_id=session["user_id"]
+    ).first()
+
+    if request.method == "POST":
+
+        staff.contact_number = request.form.get(
+            "contact_number"
+        )
+
+        staff.experience_years = int(
+            request.form.get("experience_years")
+        )
+
+        db.session.commit()
+
+        return redirect("/staff")
+
+    return render_template(
+        "staff_profile.html",
+        staff=staff
+    )
+@app.route("/staff/trek-users/<int:trek_id>")
+def view_trek_users(trek_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "staff":
+        return "Access Denied"
+
+    staff = StaffProfile.query.filter_by(
+        user_id=session["user_id"]
+    ).first()
+
+    trek = Trek.query.get_or_404(trek_id)
+
+    if trek.assigned_staff_id != staff.id:
+        return "Access Denied"
+
+    bookings = Booking.query.filter_by(
+        trek_id=trek.id
+    ).all()
+
+    return render_template(
+        "view_trek_users.html",
+        trek=trek,
+        bookings=bookings
+    )
+@app.route("/staff/update-slots/<int:trek_id>", methods=["GET", "POST"])
+def update_slots(trek_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "staff":
+        return "Access Denied"
+
+    staff = StaffProfile.query.filter_by(
+        user_id=session["user_id"]
+    ).first()
+
+    trek = Trek.query.get_or_404(trek_id)
+
+    if trek.assigned_staff_id != staff.id:
+        return "Access Denied"
+
+    if request.method == "POST":
+
+        trek.available_slots = int(
+            request.form.get("available_slots")
+        )
+
+        db.session.commit()
+
+        return redirect("/staff")
+
+    return render_template(
+        "update_slots.html",
+        trek=trek
+    )
+@app.route("/staff/update-status/<int:trek_id>", methods=["GET", "POST"])
+def update_trek_status(trek_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "staff":
+        return "Access Denied"
+
+    staff = StaffProfile.query.filter_by(
+        user_id=session["user_id"]
+    ).first()
+
+    trek = Trek.query.get_or_404(trek_id)
+
+    if trek.assigned_staff_id != staff.id:
+        return "Access Denied"
+
+    if request.method == "POST":
+
+        trek.status = request.form.get("status")
+
+        db.session.commit()
+
+        return redirect("/staff")
+
+    return render_template(
+        "update_trek_status.html",
+        trek=trek
     )
 @app.route("/approve/<int:staff_id>")
 def approve_staff(staff_id):
@@ -258,13 +483,52 @@ def approve_staff(staff_id):
 
 @app.route("/user")
 def user_dashboard():
+
     if "user_id" not in session:
         return redirect("/login")
 
     if session["role"] != "user":
         return "Access Denied"
 
-    return "Welcome User Dashboard"
+    treks = Trek.query.all()
+
+    return render_template(
+        "user_dashboard.html",
+        treks=treks
+    )
+
+
+@app.route("/book-trek/<int:trek_id>")
+def book_trek(trek_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "user":
+        return "Access Denied"
+
+    trek = Trek.query.get_or_404(trek_id)
+
+    existing_booking = Booking.query.filter_by(
+        user_id=session["user_id"],
+        trek_id=trek.id
+    ).first()
+
+    if existing_booking:
+        return "You have already booked this trek"
+
+    booking = Booking(
+        user_id=session["user_id"],
+        trek_id=trek.id,
+        booking_status="booked",
+        payment_status="pending"
+    )
+
+    db.session.add(booking)
+    db.session.commit()
+
+    return redirect("/user")
+
 @app.route("/logout")
 def logout():
 
@@ -354,28 +618,62 @@ def edit_trek(trek_id):
     return render_template(
         "edit_trek.html",
         trek=trek
-    )@app.route("/admin/users")
-def manage_users():
-
-    users = User.query.filter_by(
-        role="user"
-    ).all()
-
-    return render_template(
-        "manage_users.html",
-        users=users
     )
 @app.route("/admin/users")
 def manage_users():
 
-    users = User.query.filter_by(
-        role="user"
-    ).all()
+    search = request.args.get("search")
+
+    users = User.query.filter_by(role="user")
+
+    if search:
+
+        users = users.filter(
+            (User.username.contains(search)) |
+            (User.email.contains(search))
+        )
+
+    users = users.all()
 
     return render_template(
         "manage_users.html",
         users=users
     )
+@app.route("/blacklist-user/<int:user_id>")
+def blacklist_user(user_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "admin":
+        return "Access Denied"
+
+    user = User.query.get_or_404(user_id)
+
+    user.is_blacklisted = True
+    user.is_active = False
+
+    db.session.commit()
+
+    return redirect("/admin/users")
+@app.route("/activate-user/<int:user_id>")
+def activate_user(user_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "admin":
+        return "Access Denied"
+
+    user = User.query.get_or_404(user_id)
+
+    user.is_blacklisted = False
+    user.is_active = True
+
+    db.session.commit()
+
+    return redirect("/admin/users")
+
 @app.route("/deactivate-user/<int:user_id>")
 def deactivate_user(user_id):
 
@@ -386,33 +684,60 @@ def deactivate_user(user_id):
     db.session.commit()
 
     return redirect("/admin/users")
-@app.route(
-    "/assign-staff/<int:trek_id>",
-    methods=["GET", "POST"]
-)
-def assign_staff(trek_id):
+@app.route("/my-bookings")
+def my_bookings():
 
-    trek = Trek.query.get_or_404(trek_id)
+    if "user_id" not in session:
+        return redirect("/login")
 
-    approved_staff = StaffProfile.query.filter_by(
-        approval_status="approved"
+    if session["role"] != "user":
+        return "Access Denied"
+
+    bookings = Booking.query.filter_by(
+        user_id=session["user_id"]
     ).all()
+    return render_template(
+        "my_bookings.html",
+        bookings=bookings
+    )
 
-    if request.method == "POST":
+@app.route("/cancel-booking/<int:booking_id>")
+def cancel_booking(booking_id):
 
-        staff_id = request.form.get("staff_id")
+    if "user_id" not in session:
+        return redirect("/login")
 
-        trek.assigned_staff_id = staff_id
+    if session["role"] != "user":
+        return "Access Denied"
 
-        db.session.commit()
+    booking = Booking.query.get_or_404(booking_id)
 
-        return redirect("/admin/treks")
+    if booking.user_id != session["user_id"]:
+        return "Access Denied"
+
+    db.session.delete(booking)
+    db.session.commit()
+
+    return redirect("/my-bookings")
+@app.route("/admin/bookings")
+def admin_bookings():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "admin":
+        return "Access Denied"
+
+    bookings = Booking.query.all()
 
     return render_template(
-        "assign_staff.html",
-        trek=trek,
-        approved_staff=approved_staff
+        "admin_bookings.html",
+        bookings=bookings
     )
+
+
+    
+
 
 if __name__ == "__main__":
     app.run(debug=True)

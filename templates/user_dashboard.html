@@ -1,0 +1,36 @@
+<h2>Available Treks</h2>
+<a href="/my-bookings">My Bookings</a>
+<br><br>
+
+<table border="1">
+
+    <tr>
+        <th>ID</th>
+        <th>Trek Name</th>
+        <th>Location</th>
+        <th>Difficulty</th>
+        <th>Slots</th>
+        <th>Action</th>
+    </tr>
+
+    {% for trek in treks %}
+
+    <tr>
+
+        <td>{{ trek.id }}</td>
+        <td>{{ trek.trek_name }}</td>
+        <td>{{ trek.location }}</td>
+        <td>{{ trek.difficulty }}</td>
+        <td>{{ trek.available_slots }}</td>
+
+        <td>
+            <a href="/book-trek/{{ trek.id }}">
+                Book Trek
+            </a>
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trek Participants</title>
+</head>
+<body>
+
+<h2>{{ trek.trek_name }} Participants</h2>
+
+<table border="1">
+
+    <tr>
+        <th>Booking ID</th>
+        <th>User Name</th>
+        <th>Email</th>
+        <th>Booking Status</th>
+    </tr>
+
+    {% for booking in bookings %}
+
+    <tr>
+        <td>{{ booking.id }}</td>
+        <td>{{ booking.user.username }}</td>
+        <td>{{ booking.user.email }}</td>
+        <td>{{ booking.booking_status }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+</body>
+</html>

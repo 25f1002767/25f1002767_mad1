@@ -4,6 +4,8 @@
     <title>Admin Dashboard</title>
 </head>
 <body>
+    <a href="/admin/bookings">View All Bookings</a>
+    <a href="/admin/staff">Manage Staff</a>
 
     <h1>Admin Dashboard</h1>
 
@@ -33,9 +35,7 @@
 
     <br><br>
 
-    <a href="/pending-staff">
-        Pending Staff Approvals
-    </a>
+    <a href="{{ url_for('pending_staff') }}">Pending Staff</a>
 
     <br><br>
 
