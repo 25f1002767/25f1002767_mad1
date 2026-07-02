@@ -1,98 +1,115 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Dashboard</title>
+<body class="bg-light">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="container mt-4">
 
-</head>
-<body>
+    <h1 class="text-center mb-4">
+        Admin Dashboard
+    </h1>
 
-    <h1>Admin Dashboard</h1>
+    <div class="row g-3">
 
-    <h3>Statistics</h3>
+        <div class="col-md-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5>Total Users</h5>
+                    <h2>{{ total_users }}</h2>
+                </div>
+            </div>
+        </div>
 
-    <p>Total Users: {{ total_users }}</p>
+        <div class="col-md-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5>Total Staff</h5>
+                    <h2>{{ total_staff }}</h2>
+                </div>
+            </div>
+        </div>
 
-    <p>Total Staff: {{ total_staff }}</p>
+        <div class="col-md-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5>Total Treks</h5>
+                    <h2>{{ total_treks }}</h2>
+                </div>
+            </div>
+        </div>
 
-    <p>Total Treks: {{ total_treks }}</p>
+        <div class="col-md-6">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5>Total Bookings</h5>
+                    <h2>{{ total_bookings }}</h2>
+                </div>
+            </div>
+        </div>
 
-    <p>Total Bookings: {{ total_bookings }}</p>
+        <div class="col-md-6">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5>Active Users</h5>
+                    <h2>{{ active_users }}</h2>
+                </div>
+            </div>
+        </div>
 
-    <p>Active Users: {{ active_users }}</p>
+    </div>
 
-    <hr>
+    <br>
 
-    <h3>System Statistics Chart</h3>
+    <div class="card shadow p-3">
 
-    <canvas id="adminChart" width="400" height="200"></canvas>
+        <h4 class="text-center">
+            System Statistics Chart
+        </h4>
 
-    <script>
+        <div style="width:600px; height:300px; margin:auto;">
+            <canvas id="adminChart"></canvas>
+        </div>
 
-        const ctx = document.getElementById('adminChart');
+    </div>
 
-        new Chart(ctx, {
-            type: 'bar',
+    <br>
 
-            data: {
-                labels: [
-                    'Treks',
-                    'Bookings',
-                    'Active Users'
-                ],
+    <div class="card shadow p-3">
 
-                datasets: [{
-                    label: 'System Statistics',
+        <h4>Quick Actions</h4>
 
-                    data: [
-                        {{ total_treks }},
-                        {{ total_bookings }},
-                        {{ active_users }}
-                    ]
-                }]
-            }
-        });
+        <div class="d-grid gap-2">
 
-    </script>
+            <a href="/admin/treks"
+               class="btn btn-primary">
+               Manage Treks
+            </a>
 
-    <hr>
+            <a href="/admin/users"
+               class="btn btn-success">
+               Manage Users
+            </a>
 
-    <h3>Quick Actions</h3>
+            <a href="/admin/staff"
+               class="btn btn-warning">
+               Manage Staff
+            </a>
 
-    <a href="/admin/treks">
-        Manage Treks
-    </a>
+            <a href="/admin/bookings"
+               class="btn btn-info">
+               View All Bookings
+            </a>
 
-    <br><br>
+            <a href="{{ url_for('pending_staff') }}"
+               class="btn btn-secondary">
+               Pending Staff
+            </a>
 
-    <a href="/admin/users">
-        Manage Users
-    </a>
+            <a href="/logout"
+               class="btn btn-danger">
+               Logout
+            </a>
 
-    <br><br>
+        </div>
 
-    <a href="/admin/staff">
-        Manage Staff
-    </a>
+    </div>
 
-    <br><br>
-
-    <a href="/admin/bookings">
-        View All Bookings
-    </a>
-
-    <br><br>
-
-    <a href="{{ url_for('pending_staff') }}">
-        Pending Staff
-    </a>
-
-    <br><br>
-
-    <a href="/logout">
-        Logout
-    </a>
-
-</body>
-</html>
+</div>
