@@ -54,6 +54,15 @@ def register():
         contact_number = request.form["contact_number"]
         experience_years = request.form["experience_years"]
 
+        # Username validation
+        if len(username) < 3:
+            return "Username must contain at least 3 characters"
+
+        # Password validation
+        if len(password) < 6:
+            return "Password must be at least 6 characters"
+
+        # Username duplicate check
         existing_user = User.query.filter_by(
             username=username
         ).first()
@@ -61,12 +70,22 @@ def register():
         if existing_user:
             return "Username already exists"
 
+        # Email duplicate check
         existing_email = User.query.filter_by(
             email=email
         ).first()
 
         if existing_email:
             return "Email already exists"
+
+        # Staff validation
+        if role == "staff":
+
+            if len(contact_number) != 10:
+                return "Contact number must be 10 digits"
+
+            if not experience_years:
+                return "Experience is required"
 
         hashed_password = generate_password_hash(password)
 
@@ -85,8 +104,7 @@ def register():
             staff = StaffProfile(
                 user_id=user.id,
                 contact_number=contact_number,
-                experience_years=int(experience_years)
-                if experience_years else None,
+                experience_years=int(experience_years),
                 approval_status="pending"
             )
 
@@ -156,13 +174,19 @@ def admin_dashboard():
 
     total_bookings = Booking.query.count()
 
+    active_users = User.query.filter_by(
+        is_active=True
+    ).count()
+
     return render_template(
         "admin_dashboard.html",
         total_users=total_users,
         total_staff=total_staff,
         total_treks=total_treks,
-        total_bookings=total_bookings
+        total_bookings=total_bookings,
+        active_users=active_users
     )
+
 @app.route("/admin/pending-staff")
 def pending_staff():
 
@@ -224,6 +248,7 @@ def blacklist_staff(staff_id):
     return redirect("/admin/staff")
 @app.route("/activate-staff/<int:staff_id>")
 def activate_staff(staff_id):
+
 
     if "user_id" not in session:
         return redirect("/login")
@@ -328,16 +353,27 @@ def staff_dashboard():
 
     total_trekkers = 0
 
+    trek_names = []
+    participant_counts = []
+
     for trek in assigned_treks:
-        total_trekkers += Booking.query.filter_by(
+
+        participants = Booking.query.filter_by(
             trek_id=trek.id
         ).count()
+
+        total_trekkers += participants
+
+        trek_names.append(trek.trek_name)
+        participant_counts.append(participants)
 
     return render_template(
         "staff_dashboard.html",
         assigned_treks=assigned_treks,
         total_assigned_treks=total_assigned_treks,
-        total_trekkers=total_trekkers
+        total_trekkers=total_trekkers,
+        trek_names=trek_names,
+        participant_counts=participant_counts
     )
 @app.route("/staff/profile", methods=["GET", "POST"])
 def staff_profile():
@@ -417,9 +453,15 @@ def update_slots(trek_id):
 
     if request.method == "POST":
 
-        trek.available_slots = int(
+        new_slots = int(
             request.form.get("available_slots")
         )
+
+        # Validation
+        if new_slots < 0:
+            return "Slots cannot be negative"
+
+        trek.available_slots = new_slots
 
         db.session.commit()
 
@@ -429,6 +471,7 @@ def update_slots(trek_id):
         "update_slots.html",
         trek=trek
     )
+    
 @app.route("/staff/update-status/<int:trek_id>", methods=["GET", "POST"])
 def update_trek_status(trek_id):
 
@@ -518,9 +561,26 @@ def user_dashboard():
 
     treks = treks.all()
 
+    user_bookings = Booking.query.filter_by(
+        user_id=session["user_id"]
+    ).all()
+
+    booking_labels = []
+    booking_data = []
+
+    for booking in user_bookings:
+
+        booking_labels.append(
+            booking.trek.trek_name
+        )
+
+        booking_data.append(1)
+
     return render_template(
         "user_dashboard.html",
-        treks=treks
+        treks=treks,
+        booking_labels=booking_labels,
+        booking_data=booking_data
     )
 @app.route("/user/profile", methods=["GET", "POST"])
 def user_profile():
@@ -593,10 +653,7 @@ def logout():
     session.clear()
 
     return redirect("/login")
-@app.route(
-    "/create-trek",
-    methods=["GET", "POST"]
-)
+@app.route("/admin/create-trek", methods=["GET", "POST"])
 def create_trek():
 
     if request.method == "POST":
@@ -604,18 +661,51 @@ def create_trek():
         trek_name = request.form.get("trek_name")
         location = request.form.get("location")
         difficulty = request.form.get("difficulty")
-        duration_days = request.form.get("duration_days")
-        available_slots = request.form.get("available_slots")
+
+        duration_days = int(
+            request.form.get("duration_days")
+        )
+
+        available_slots = int(
+            request.form.get("available_slots")
+        )
+
         start_date = datetime.strptime(
-        request.form.get("start_date"),
-        "%Y-%m-%d"
+            request.form.get("start_date"),
+            "%Y-%m-%d"
         ).date()
 
         end_date = datetime.strptime(
             request.form.get("end_date"),
             "%Y-%m-%d"
         ).date()
+
         description = request.form.get("description")
+
+        # Validation 1
+        if not trek_name or not location:
+            return "Trek Name and Location are required"
+
+        # Validation 2
+        if duration_days <= 0:
+            return "Duration must be greater than 0"
+
+        # Validation 3
+        if available_slots <= 0:
+            return "Available slots must be greater than 0"
+
+        # Validation 4
+        if start_date >= end_date:
+            return "End date must be after start date"
+
+        # Validation 5
+        existing_trek = Trek.query.filter_by(
+            trek_name=trek_name,
+            start_date=start_date
+        ).first()
+
+        if existing_trek:
+            return "This trek already exists"
 
         new_trek = Trek(
             trek_name=trek_name,
@@ -629,7 +719,6 @@ def create_trek():
         )
 
         db.session.add(new_trek)
-
         db.session.commit()
 
         return redirect("/admin/treks")

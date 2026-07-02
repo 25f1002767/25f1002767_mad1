@@ -1,5 +1,8 @@
 <h2>My Assigned Treks</h2>
 <h2>Staff Dashboard</h2>
+<canvas id="staffChart" width="400" height="200"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 <p>Total Assigned Treks: {{ total_assigned_treks }}</p>
 
@@ -47,3 +50,25 @@
     {% endfor %}
 
 </table>
+<canvas id="staffChart"></canvas>
+
+<script>
+
+new Chart(
+document.getElementById('staffChart'),
+{
+    type: 'bar',
+
+    data: {
+
+        labels: {{ trek_names|tojson }},
+
+        datasets: [{
+            label: 'Participants',
+
+            data: {{ participant_counts|tojson }}
+        }]
+    }
+});
+
+</script>

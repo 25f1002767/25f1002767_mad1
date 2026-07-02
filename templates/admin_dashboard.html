@@ -2,10 +2,11 @@
 <html>
 <head>
     <title>Admin Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 <body>
-    <a href="/admin/bookings">View All Bookings</a>
-    <a href="/admin/staff">Manage Staff</a>
 
     <h1>Admin Dashboard</h1>
 
@@ -18,6 +19,42 @@
     <p>Total Treks: {{ total_treks }}</p>
 
     <p>Total Bookings: {{ total_bookings }}</p>
+
+    <p>Active Users: {{ active_users }}</p>
+
+    <hr>
+
+    <h3>System Statistics Chart</h3>
+
+    <canvas id="adminChart" width="400" height="200"></canvas>
+
+    <script>
+
+        const ctx = document.getElementById('adminChart');
+
+        new Chart(ctx, {
+            type: 'bar',
+
+            data: {
+                labels: [
+                    'Treks',
+                    'Bookings',
+                    'Active Users'
+                ],
+
+                datasets: [{
+                    label: 'System Statistics',
+
+                    data: [
+                        {{ total_treks }},
+                        {{ total_bookings }},
+                        {{ active_users }}
+                    ]
+                }]
+            }
+        });
+
+    </script>
 
     <hr>
 
@@ -35,7 +72,21 @@
 
     <br><br>
 
-    <a href="{{ url_for('pending_staff') }}">Pending Staff</a>
+    <a href="/admin/staff">
+        Manage Staff
+    </a>
+
+    <br><br>
+
+    <a href="/admin/bookings">
+        View All Bookings
+    </a>
+
+    <br><br>
+
+    <a href="{{ url_for('pending_staff') }}">
+        Pending Staff
+    </a>
 
     <br><br>
 

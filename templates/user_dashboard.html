@@ -1,4 +1,25 @@
 <h2>Available Treks</h2>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<canvas id="userChart" width="400" height="200"></canvas>
+<script>
+
+new Chart(
+document.getElementById('userChart'),
+{
+    type: 'pie',
+
+    data: {
+
+        labels: {{ booking_labels|tojson }},
+
+        datasets: [{
+            data: {{ booking_data|tojson }}
+        }]
+    }
+});
+
+</script>
 <a href="/my-bookings">My Bookings</a>
 <a href="/trek-history">Trek History</a>
 <br><br>
