@@ -451,6 +451,15 @@ def update_trek_status(trek_id):
 
         trek.status = request.form.get("status")
 
+        if trek.status == "Completed":
+
+            bookings = Booking.query.filter_by(
+                trek_id=trek.id
+            ).all()
+
+            for booking in bookings:
+                booking.booking_status = "Completed"
+
         db.session.commit()
 
         return redirect("/staff")
@@ -767,7 +776,7 @@ def cancel_booking(booking_id):
 
     trek.available_slots += 1
 
-    db.session.delete(booking)
+    booking.booking_status = "Cancelled"
     db.session.commit()
 
     return redirect("/my-bookings")
