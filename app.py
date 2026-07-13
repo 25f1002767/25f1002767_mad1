@@ -1,14 +1,11 @@
-from flask import Flask, render_template, request, redirect , session,  jsonify 
+from flask import Flask, render_template, request, redirect , session
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager
 
 from models import db, User, StaffProfile, Trek
-from models import User
 from models import Booking
 from flask_login import (
     LoginManager,
-    UserMixin,
     login_user,
     logout_user,
     login_required,
@@ -47,13 +44,8 @@ with app.app_context():
 
 @app.route("/")
 def home():
-    return redirect("/register")
-# -------------------------------
-# Home Route
-# -------------------------------
-# If someone visits:
-# http://127.0.0.1:5000/
-# they will automatically go to
+    return redirect("/login")
+
 # http://127.0.0.1:5000/register
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -915,203 +907,37 @@ def trek_history():
         "trek_history.html",
         history=history
     )
-@app.route("/api/treks", methods=["GET"])
-def get_treks():
 
-    treks = Trek.query.all()
 
-    trek_list = []
 
-    for trek in treks:
 
-        trek_list.append({
-            "id": trek.id,
-            "trek_name": trek.trek_name,
-            "location": trek.location,
-            "difficulty": trek.difficulty,
-            "duration_days": trek.duration_days,
-            "available_slots": trek.available_slots,
-            "status": trek.status
-        })
+@app.route("/delete-user/<int:user_id>")
+def delete_user(user_id):
 
-    return jsonify(trek_list)
-@app.route("/api/treks", methods=["POST"])
-def create_trek_api():
-
-    data = request.get_json()
-
-    trek = Trek(
-        trek_name=data["trek_name"],
-        location=data["location"],
-        difficulty=data["difficulty"],
-        duration_days=data["duration_days"],
-        available_slots=data["available_slots"],
-        start_date=data["start_date"],
-        end_date=data["end_date"],
-        status=data["status"]
-    )
-
-    db.session.add(trek)
-    db.session.commit()
-
-    return jsonify({
-        "message": "Trek created successfully"
-    }), 201
-    
-@app.route("/api/treks/<int:trek_id>", methods=["PUT"])
-def update_trek_api(trek_id):
-
-    trek = Trek.query.get_or_404(trek_id)
-
-    data = request.get_json()
-
-    trek.trek_name = data["trek_name"]
-    trek.location = data["location"]
-    trek.difficulty = data["difficulty"]
-    trek.available_slots = data["available_slots"]
-    trek.status = data["status"]
-
-    db.session.commit()
-
-    return jsonify({
-        "message": "Trek updated successfully"
-    })
-
-@app.route("/api/treks/<int:trek_id>", methods=["DELETE"])
-def delete_trek_api(trek_id):
-
-    trek = Trek.query.get_or_404(trek_id)
-
-    db.session.delete(trek)
-    db.session.commit()
-
-    return jsonify({
-        "message": "Trek deleted successfully"
-    })
-@app.route("/api/users", methods=["GET"])
-def get_users():
-
-    users = User.query.all()
-
-    user_list = []
-
-    for user in users:
-
-        user_list.append({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "role": user.role,
-            "is_active": user.is_active,
-            "is_blacklisted": user.is_blacklisted
-        })
-
-    return jsonify(user_list)
-@app.route("/api/users", methods=["POST"])
-def create_user_api():
-
-    data = request.get_json()
-
-    user = User(
-        username=data["username"],
-        email=data["email"],
-        password=data["password"],
-        role=data["role"]
-    )
-
-    db.session.add(user)
-    db.session.commit()
-
-    return jsonify({
-        "message": "User created successfully"
-    }), 201
-@app.route("/api/users/<int:user_id>", methods=["PUT"])
-def update_user_api(user_id):
-
-    user = User.query.get_or_404(user_id)
-
-    data = request.get_json()
-
-    user.username = data["username"]
-    user.email = data["email"]
-    user.role = data["role"]
-
-    db.session.commit()
-
-    return jsonify({
-        "message": "User updated successfully"
-    })
-@app.route("/api/users/<int:user_id>", methods=["DELETE"])
-def delete_user_api(user_id):
-
-    user = User.query.get_or_404(user_id)
+    user = User.query.get(user_id)
 
     db.session.delete(user)
     db.session.commit()
 
-    return jsonify({
-        "message": "User deleted successfully"
-    })
-@app.route("/api/bookings", methods=["GET"])
-def get_bookings():
+    return redirect("/admin/users")    
+@app.route("/edit-user/<int:user_id>", methods=["GET", "POST"])
+def edit_user(user_id):
 
-    bookings = Booking.query.all()
+    user = User.query.get(user_id)
 
-    booking_list = []
+    if request.method == "POST":
 
-    for booking in bookings:
+        user.username = request.form["username"]
+        user.email = request.form["email"]
 
-        booking_list.append({
-            "id": booking.id,
-            "user_id": booking.user_id,
-            "trek_id": booking.trek_id,
-            "booking_status": booking.booking_status,
-            "payment_status": booking.payment_status
-        })
+        db.session.commit()
 
-    return jsonify(booking_list)
-@app.route("/api/bookings", methods=["POST"])
-def create_booking_api():
+        return redirect("/admin/users")
 
-    data = request.get_json()
-
-    booking = Booking(
-        user_id=data["user_id"],
-        trek_id=data["trek_id"]
+    return render_template(
+        "edit_user.html",
+        user=user
     )
-
-    db.session.add(booking)
-    db.session.commit()
-
-    return jsonify({
-        "message": "Booking created successfully"
-    }), 201
-@app.route("/api/bookings/<int:booking_id>", methods=["PUT"])
-def update_booking_api(booking_id):
-
-    booking = Booking.query.get_or_404(booking_id)
-
-    data = request.get_json()
-
-    booking.booking_status = data["booking_status"]
-    booking.payment_status = data["payment_status"]
-
-    db.session.commit()
-
-    return jsonify({
-        "message": "Booking updated successfully"
-    })
-@app.route("/api/bookings/<int:booking_id>", methods=["DELETE"])
-def delete_booking_api(booking_id):
-
-    booking = Booking.query.get_or_404(booking_id)
-
-    db.session.delete(booking)
-    db.session.commit()
-
-    return jsonify({
-        "message": "Booking deleted successfully"
-    })
 
 if __name__ == "__main__":
     app.run(debug=True)

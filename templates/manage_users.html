@@ -1,82 +1,77 @@
-<h2>Manage Users</h2>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<form method="GET">
+<!DOCTYPE html>
+<html>
 
-    <input
-        type="text"
-        name="search"
-        placeholder="Search user name or email">
+<head>
+    <title>Manage Users</title>
 
-    <button type="submit">
-        Search
-    </button>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 
-</form>
+<body>
 
-<br>
-<table border="1">
+    <h2>Manage Users</h2>
 
-    <tr>
-        <th>ID</th>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Status</th>
-        <th>Action</th>
-    </tr>
+    <form method="GET">
 
-    {% for user in users %}
+        <input
+            type="text"
+            name="search"
+            placeholder="Search Username or Email">
 
-    <tr>
+        <button type="submit">
+            Search
+        </button>
 
-        <td>{{ user.id }}</td>
+    </form>
 
-        <td>{{ user.username }}</td>
+    <br>
 
-        <td>{{ user.email }}</td>
+    <table>
 
-        <td>
-            {% if user.is_active %}
-                Active
-            {% else %}
-                Inactive
-            {% endif %}
-        </td>
-        <td>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+
+        {% for user in users %}
+
+        <tr>
+
+            <td>{{ user.id }}</td>
+
+            <td>{{ user.username }}</td>
+
+            <td>{{ user.email }}</td>
+
+            <td>{{ user.role }}</td>
+
             <td>
 
-    {% if user.is_blacklisted %}
+                <a href="/edit-user/{{ user.id }}">
+                    Edit
+                </a>
 
-        <a href="/activate-user/{{ user.id }}">
-            Activate
-        </a>
+                |
 
-    {% else %}
+                <a href="/delete-user/{{ user.id }}">
+                    Delete
+                </a>
 
-        <a href="/blacklist-user/{{ user.id }}">
-            Blacklist
-        </a>
+            </td>
 
-    {% endif %}
+        </tr>
 
-</td>
+        {% endfor %}
 
-    {% if user.is_active %}
+    </table>
 
-    <a href="/deactivate-user/{{ user.id }}">
-        Deactivate
-    </a>
+    <br>
 
-    {% else %}
+    
+</body>
 
-    Inactive
-
-    {% endif %}
-
-</td>
-
-    </tr>
-
-    {% endfor %}
-
-</table>
+</html>
